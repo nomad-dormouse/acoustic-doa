@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 import plotly.subplots as sp
 
 # Load audio
-filename = 'shahed_drone.mp4'  # replace with your file
+filename = 'data/shahed_drone.mp4'  # replace with your file
 y, sr = librosa.load(filename, sr=None)
 
 # Time vector for waveform
@@ -80,8 +80,8 @@ fig.update_yaxes(range=[0, 8000], row=3, col=1)
 fig.update_xaxes(range=[0, 8000], row=1, col=1)
 
 # Align y-axis titles for all plots
-fig.update_yaxes(title_standoff=20, row=1, col=1)
-fig.update_yaxes(title_standoff=20, row=2, col=1)
+fig.update_yaxes(title_standoff=25, row=1, col=1)
+fig.update_yaxes(title_standoff=15, row=2, col=1)
 fig.update_yaxes(title_standoff=20, row=3, col=1)
 
 # Show plot
