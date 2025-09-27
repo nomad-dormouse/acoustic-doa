@@ -2,6 +2,7 @@ import math
 import numpy as np
 from scipy.signal import butter, sosfiltfilt
 from scipy.fft import rfftfreq, rfft, irfft
+import plotly.graph_objects as go
 
 from config import D, C, W_REC
 
@@ -62,7 +63,6 @@ def gcc_phat_delay(
             signed_lag_samples = lag_samples - (2*max_shift_samples + 1)
 
     if plot_between_times[0] <= time_center <= plot_between_times[1]:
-        import plotly.graph_objects as go
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=np.arange(len(cc)), y=cc, mode='lines'))
         fig.update_layout(title=f"{time_center}")

@@ -38,7 +38,7 @@ def plot_frequency_spectrum(x, samplerate):
     for i in range(mag_db.shape[0]):
         fig.add_trace(go.Scatter(x=freqs, y=mag_db[i], mode='lines', name=f'CH{i}'))
     
-    fig.update_xaxes(range=[0, 5000])
+    # fig.update_xaxes(range=[0, 5000])
     
     fig.update_layout(
         title='Frequency Decomposition (Magnitude Spectrum)',
@@ -70,10 +70,10 @@ def plot_time_domain_waveforms(x, samplerate, max_seconds=None):
     
     return fig
 
-def plot_doa_analysis(x, samplerate, window_size=W_REC):
+def plot_doa_analysis(x, samplerate, window_size):
     # Compute DOA properties for the first two channels (stereo pair)
     time_centers, lags, taus, thetas, ccs = compute_doa_properties(
-        x[:, :2],
+        x,
         samplerate,
         window_size=window_size,
     )
@@ -81,8 +81,15 @@ def plot_doa_analysis(x, samplerate, window_size=W_REC):
     # Create subplot figure for DOA properties (5 rows: time domain + 4 DOA plots)
     fig = make_subplots(
         rows=5, cols=1,
-        subplot_titles=('Time Domain Waveforms', 'Sample Lag', 'Time Delay (τ) in µs', 'Azimuth Angle (θ) in degrees', 'Cross-Correlation'),
-        vertical_spacing=0.05
+        subplot_titles=(
+            'Time Domain Waveforms',
+            'Sample Lag',
+            'Time Delay (τ) in µs',
+            'Azimuth Angle (θ) in degrees',
+            'Cross-Correlation',
+        ),
+        vertical_spacing=0.05,
+        shared_xaxes=True,
     )
     
     # Plot time domain waveforms (first subplot)
@@ -142,7 +149,6 @@ def plot_doa_analysis(x, samplerate, window_size=W_REC):
     
     return fig
 
-
 def main():
     # Load input either from WAV (if path is provided) or record live
     x, samplerate = record_stereo(seconds=SECONDS, channels=2, samplerate=SR)
@@ -152,7 +158,7 @@ def main():
     # Create and show all plots
     fig_freq = plot_frequency_spectrum(x, samplerate)
     fig_freq_filtered = plot_frequency_spectrum(x_filtered, samplerate)
-    fig_doa = plot_doa_analysis(x_filtered, samplerate, window_size=W_REC)  # Now includes time domain plot
+    fig_doa = plot_doa_analysis(x_filtered, samplerate, window_size=W_REC)
 
     # Show all figures
     fig_freq.show()

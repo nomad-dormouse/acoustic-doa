@@ -1,5 +1,5 @@
 
-FILT_F = 800
+FILT_F = 1000
 FILT_BW = 50
 SECONDS = 10
 
