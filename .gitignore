@@ -9,6 +9,5 @@ wheels/
 # Virtual environments
 .venv
 
-# Data and model files
-data/dads/
-models/
+# Outdated files
+ml_old/
