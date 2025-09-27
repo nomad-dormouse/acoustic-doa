@@ -39,11 +39,12 @@ def naive_shift(data):
     data_1 = data[1] / np.linalg.norm(data[1])
     scalar_products = np.array([data_0 @ np.roll(data_1, shift=i) for i in shift_values])
     shift_raw = np.argmax(scalar_products)
+    overlap_strength = scalar_products[shift_raw]
     shift = shift_values[shift_raw]
 
     rolled_values = np.roll(scalar_products, -(shift_raw-3))[:7]
     confidence = np.max(rolled_values) -np.mean(rolled_values)
-    return shift, confidence
+    return shift, confidence, overlap_strength
 
 def box_filter(X, filtration_values, filtration_width):
     X_filtered = X.copy()
@@ -77,12 +78,12 @@ def theta_from_stream(stream, shift_history):
     filtered_data = irfft(filtered_X, n=channels.shape[1])
     
     # compute shift
-    shift, confidence = naive_shift(filtered_data)
+    shift, confidence, overlap_strength = naive_shift(filtered_data)
     shift_history.append(shift)
     smooth_shift = int(np.round(np.mean(shift_history)))
     theta = azimuth_from_shift(smooth_shift)
     logging.info(f"{smooth_shift}, {theta}")
-    return theta, shift_history
+    return theta, shift_history, overlap_strength
 
 def wrap_to_180(angle):
     """Wrap angle to [-180, 180] degrees"""
@@ -116,7 +117,7 @@ try:
         # Flip the frame horizontally to correct the mirror effect
         frame = cv2.flip(frame, 1)
 
-        doa_azimuth, shift_history = theta_from_stream(stream, shift_history)
+        doa_azimuth, shift_history, overlap_strength = theta_from_stream(stream, shift_history)
         x = azimuth_to_x(doa_azimuth)
 
         # Draw uncertainty cone (± degrees)
@@ -137,7 +138,7 @@ try:
         )
 
         # Draw text
-        label = f"Azimuth: {doa_azimuth:6.1f}"
+        label = f"Azimuth: {doa_azimuth:6.1f}"#, Danger: {max(0, min(1, 5*(overlap_strength-0.7))):.2f}"
         cv2.putText(frame, label, (10, H - 20), FONT, 0.8, (255,255,255), 2, cv2.LINE_AA)
 
         # Show frame
