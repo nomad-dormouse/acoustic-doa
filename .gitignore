@@ -5,10 +5,10 @@ build/
 dist/
 wheels/
 *.egg-info
+.DS_Store
 
 # Virtual environments
 .venv
 
 # Outdated files
 ml_old/
-.DS_Store
