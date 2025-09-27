@@ -6,7 +6,7 @@ import webbrowser
 import os
 
 # Load audio (WAV file - librosa will use soundfile backend)
-filename = 'data/shahed.wav'  # WAV audio file
+filename = 'data/shahed-hit-0to4s.wav'  # WAV audio file
 y, sr = librosa.load(filename, sr=None)
 
 # Time vector for waveform
@@ -84,5 +84,5 @@ fig.update_yaxes(title_standoff=15, row=2, col=1)
 fig.update_yaxes(title_standoff=20, row=3, col=1)
 
 # Save plot as HTML file and open in browser
-fig.write_html("outputs/plotly/shahed_acoustic_footprint.html")
-webbrowser.open(f"file://{os.path.abspath('outputs/plotly/shahed_acoustic_footprint.html')}")
+fig.write_html("outputs/plotly/shahed_hit_0to4s_acoustic_footprint.html")
+webbrowser.open(f"file://{os.path.abspath('outputs/plotly/shahed_hit_0to4s_acoustic_footprint.html')}")
