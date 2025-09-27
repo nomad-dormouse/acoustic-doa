@@ -2,6 +2,8 @@ import numpy as np
 import librosa
 import plotly.graph_objects as go
 import plotly.subplots as sp
+import webbrowser
+import os
 
 # Load audio (WAV file - librosa will use soundfile backend)
 filename = 'data/shahed.wav'  # WAV audio file
@@ -22,7 +24,6 @@ freqs = librosa.fft_frequencies(sr=sr, n_fft=n_fft)
 
 # Calculate frequency spectrum (average over time)
 freq_spectrum = np.mean(S_db, axis=1)
-
 
 # Create subplot figure
 fig = sp.make_subplots(
@@ -58,8 +59,6 @@ fig.add_trace(
     row=3, col=1
 )
 
-
-
 # Update layout
 fig.update_layout(
     height=800,
@@ -84,5 +83,6 @@ fig.update_yaxes(title_standoff=25, row=1, col=1)
 fig.update_yaxes(title_standoff=15, row=2, col=1)
 fig.update_yaxes(title_standoff=20, row=3, col=1)
 
-# Show plot
-fig.show()
+# Save plot as HTML file and open in browser
+fig.write_html("outputs/plotly/shahed_acoustic_footprint.html")
+webbrowser.open(f"file://{os.path.abspath('outputs/plotly/shahed_acoustic_footprint.html')}")
