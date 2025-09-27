@@ -24,6 +24,11 @@ def create_acoustic_footprint(filename):
     times = librosa.frames_to_time(np.arange(S_db.shape[1]), sr=sr, hop_length=hop_length)
     freqs = librosa.fft_frequencies(sr=sr, n_fft=n_fft)
 
+    # Limit frequencies to 4000 Hz
+    max_freq_idx = np.where(freqs <= 4000)[0][-1]
+    freqs = freqs[:max_freq_idx + 1]
+    S_db = S_db[:max_freq_idx + 1, :]
+
     # Calculate frequency spectrum (average over time)
     freq_spectrum = np.mean(S_db, axis=1)
 
@@ -74,11 +79,11 @@ def create_acoustic_footprint(filename):
         yaxis3_title='Frequency (Hz)',
     )
 
-    # Limit y-axis of spectrogram (optional)
-    fig.update_yaxes(range=[0, 8000], row=3, col=1)
+    # Limit y-axis of spectrogram to match our frequency limit
+    fig.update_yaxes(range=[0, 4000], row=3, col=1)
 
-    # Limit x-axis of frequency spectrum to focus on audible range
-    fig.update_xaxes(range=[0, 8000], row=1, col=1)
+    # Limit x-axis of frequency spectrum to match our frequency limit
+    fig.update_xaxes(range=[0, 4000], row=1, col=1)
 
     # Align y-axis titles for all plots
     fig.update_yaxes(title_standoff=25, row=1, col=1)
@@ -89,7 +94,7 @@ def create_acoustic_footprint(filename):
     input_path = Path(filename)
     output_filename = f"{input_path.stem}_acoustic_footprint.html"
     output_path = Path("outputs/plotly") / output_filename
-    
+
     # Create output directory if it doesn't exist
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
