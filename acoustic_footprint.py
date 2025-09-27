@@ -3,8 +3,8 @@ import librosa
 import plotly.graph_objects as go
 import plotly.subplots as sp
 
-# Load audio
-filename = 'data/shahed_drone.mp4'  # replace with your file
+# Load audio (WAV file - librosa will use soundfile backend)
+filename = 'data/shahed.wav'  # WAV audio file
 y, sr = librosa.load(filename, sr=None)
 
 # Time vector for waveform
