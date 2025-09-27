@@ -16,6 +16,8 @@ uv sync
 
 ## Audio Conversion
 
+### Convert MP4 to WAV
+
 To convert MP4 audio files to WAV format:
 
 ```bash
@@ -28,6 +30,22 @@ This command:
 - `-acodec pcm_s16le` - 16-bit PCM audio codec
 - `-ar 44100` - Sample rate of 44.1 kHz
 - `-ac 1` - Mono channel
+- `output.wav` - Output WAV file
+
+### Crop WAV Files
+
+To crop a WAV file to a specific time range:
+
+```bash
+ffmpeg -ss 00:00:00 -to 00:00:04 -i data/shahed-hit.wav -vn -acodec pcm_s16le data/shahed-hit-0to4s.wav
+```
+
+This command:
+- `-ss 00:00:00` - Start time (hours:minutes:seconds)
+- `-to 00:00:04` - End time (hours:minutes:seconds)
+- `-i input.wav` - Input WAV file
+- `-vn` - No video (audio only)
+- `-acodec pcm_s16le` - 16-bit PCM audio codec
 - `output.wav` - Output WAV file
 
 ## Usage
