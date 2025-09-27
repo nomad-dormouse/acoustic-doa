@@ -156,7 +156,8 @@ def analyze_audio(filename, prominence=1):
             'file': Path(filename).name,
             'fundamental': fundamental,
             'harmonics': harmonics,
-            'peak_count': len(peak_freqs)
+            'peak_count': len(peak_freqs),
+            'all_peaks': list(zip(top_freqs, top_mags))
         }
     else:
         print("  No clear harmonic pattern found")
@@ -194,9 +195,14 @@ if __name__ == "__main__":
         print(f"\n📊 SUMMARY:")
         print(f"Segments with harmonics: {len(results)}")
         if results:
-            print("Fundamental frequencies detected:")
+            print("Fundamental frequencies and all peaks detected:")
             for result in results:
-                print(f"  {result['file']}: {result['fundamental']:.1f} Hz ({result['peak_count']} peaks)")
+                print(f"  {result['file']}: {result['fundamental']:.1f} Hz (total {result['peak_count']} peaks)")
+                print("    All peaks:")
+                # Sort peaks by frequency value
+                sorted_peaks = sorted(result['all_peaks'], key=lambda x: x[0])
+                for freq, mag in sorted_peaks:
+                    print(f"      {freq:.1f} Hz (magnitude: {mag:.1f})")
     else:
         # Single file analysis (default behavior)
         result = analyze_audio(args.input_path, args.prominence)
