@@ -5,7 +5,7 @@ from scipy.signal import find_peaks
 import argparse
 from pathlib import Path
 
-def extract_frequency_peaks(filename, min_prominence=10, min_distance=50):
+def extract_frequency_peaks(filename, min_prominence=1, min_distance=50):
     """
     Extract dominant frequency peaks from audio file.
     
@@ -33,14 +33,21 @@ def extract_frequency_peaks(filename, min_prominence=10, min_distance=50):
     # Average spectrum over time
     avg_spectrum = np.mean(S, axis=1)
     
+    # Limit frequencies to 4000 Hz
+    max_freq_idx = np.where(freqs <= 4000)[0][-1]
+    freqs = freqs[:max_freq_idx + 1]
+    avg_spectrum = avg_spectrum[:max_freq_idx + 1]
+    
     print(f"  Spectrum max: {np.max(avg_spectrum):.6f}")
     print(f"  Spectrum mean: {np.mean(avg_spectrum):.6f}")
+    print(f"  Frequency range: 0 - {freqs[-1]:.1f} Hz")
     
     # Find peaks in frequency domain
+    distance_samples = max(1, int(min_distance * len(freqs) / (sr/2)))
     peaks, properties = find_peaks(
         avg_spectrum, 
         prominence=min_prominence,
-        distance=int(min_distance * len(freqs) / (sr/2))
+        distance=distance_samples
     )
     
     # Convert to frequency values
@@ -110,7 +117,7 @@ def check_harmonics(peak_freqs, tolerance=0.05):
     return best_fundamental, best_harmonics
 
 
-def analyze_audio(filename, prominence=20):
+def analyze_audio(filename, prominence=1):
     """
     Analyze a single audio file for harmonic patterns.
     """
@@ -123,11 +130,17 @@ def analyze_audio(filename, prominence=20):
         print("  No significant peaks found")
         return None
     
-    # Print top 5 peaks
+    # Print top 5 peaks sorted by frequency value
     top_indices = np.argsort(peak_mags)[-5:][::-1]
-    print("  Top 5 frequency peaks:")
-    for idx in top_indices:
-        print(f"    {peak_freqs[idx]:.1f} Hz (magnitude: {peak_mags[idx]:.1f})")
+    top_freqs = peak_freqs[top_indices]
+    top_mags = peak_mags[top_indices]
+    
+    # Sort by frequency value
+    sorted_indices = np.argsort(top_freqs)
+    
+    print("  Top 5 frequency peaks (sorted by frequency):")
+    for idx in sorted_indices:
+        print(f"    {top_freqs[idx]:.1f} Hz (magnitude: {top_mags[idx]:.1f})")
     
     # Check for harmonics
     fundamental, harmonics = check_harmonics(peak_freqs)
@@ -149,7 +162,7 @@ def analyze_audio(filename, prominence=20):
         print("  No clear harmonic pattern found")
         return None
 
-def analyze_batch(segments_dir, pattern="*segment*.wav", prominence=20):
+def analyze_batch(segments_dir, pattern="*segment*.wav", prominence=1):
     """
     Analyze multiple audio segments for harmonic patterns using analyze_audio.
     """
@@ -168,21 +181,13 @@ def analyze_batch(segments_dir, pattern="*segment*.wav", prominence=20):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Detect harmonic patterns in audio segments")
     parser.add_argument("input_path", help="Directory containing audio segments or single audio file")
-    parser.add_argument("--prominence", type=float, default=10, help="Minimum peak prominence")
+    parser.add_argument("--prominence", type=float, default=1, help="Minimum peak prominence")
     parser.add_argument("--tolerance", type=float, default=0.05, help="Harmonic tolerance (0.05 = 5%)")
-    parser.add_argument("--batch", action="store_true", help="Process single file instead of directory")
+    parser.add_argument("--batch", action="store_true", help="Process directory in batch mode")
     
     args = parser.parse_args()
     
-    if args.batch or Path(args.input_path).is_file():
-        # Single file analysis
-        result = analyze_audio(args.input_path, args.prominence)
-        if result:
-            print(f"\n📊 RESULT:")
-            print(f"File: {result['file']}")
-            print(f"Fundamental: {result['fundamental']:.1f} Hz")
-            print(f"Peaks found: {result['peak_count']}")
-    else:
+    if args.batch:
         # Directory analysis using analyze_batch
         results = analyze_batch(args.input_path, prominence=args.prominence)
         
@@ -192,3 +197,11 @@ if __name__ == "__main__":
             print("Fundamental frequencies detected:")
             for result in results:
                 print(f"  {result['file']}: {result['fundamental']:.1f} Hz ({result['peak_count']} peaks)")
+    else:
+        # Single file analysis (default behavior)
+        result = analyze_audio(args.input_path, args.prominence)
+        if result:
+            print(f"\n📊 RESULT:")
+            print(f"File: {result['file']}")
+            print(f"Fundamental: {result['fundamental']:.1f} Hz")
+            print(f"Peaks found: {result['peak_count']}")
