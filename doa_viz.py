@@ -16,9 +16,8 @@ fs = 48000  # Sampling frequency in Hz
 max_shift = int(d / c * fs) + 1  # Maximum shift in samples
 shift_values = np.arange(-max_shift, max_shift + 1)
 
-rate = fs
 computations_frequency = 5  # per second
-chunk_size = int(rate/computations_frequency)
+chunk_size = int(fs/computations_frequency)
 dtype = pyaudio.paInt16
 n_channels = 2
 record_seconds = 100
@@ -42,9 +41,7 @@ def naive_shift(data):
     overlap_strength = scalar_products[shift_raw]
     shift = shift_values[shift_raw]
 
-    rolled_values = np.roll(scalar_products, -(shift_raw-3))[:7]
-    confidence = np.max(rolled_values) -np.mean(rolled_values)
-    return shift, confidence, overlap_strength
+    return shift, overlap_strength
 
 def box_filter(X, filtration_values, filtration_width):
     X_filtered = X.copy()
@@ -65,7 +62,7 @@ def azimuth_from_shift(shift):
     theta = math.degrees(math.asin(s))
     return theta
 
-def theta_from_stream(stream, shift_history):
+def theta_from_stream(stream, shift_history, overlap_history):
     raw_data = stream.read(chunk_size)
     data = np.frombuffer(raw_data, dtype=np.int16)
     channel_0 = data[0::n_channels]
@@ -78,20 +75,50 @@ def theta_from_stream(stream, shift_history):
     filtered_data = irfft(filtered_X, n=channels.shape[1])
     
     # compute shift
-    shift, confidence, overlap_strength = naive_shift(filtered_data)
+    shift, overlap = naive_shift(filtered_data)
     shift_history.append(shift)
+    overlap_history.append(overlap)
     smooth_shift = int(np.round(np.mean(shift_history)))
     theta = azimuth_from_shift(smooth_shift)
     logging.info(f"{smooth_shift}, {theta}")
-    return theta, shift_history, overlap_strength
-
-def wrap_to_180(angle):
-    """Wrap angle to [-180, 180] degrees"""
-    return ((angle + 180) % 360) - 180
+    return theta, shift_history, overlap_history
 
 def azimuth_to_x(azimuth_deg):
     """Convert a world azimuth to x-coordinate in image frame"""
     return int((0.5 + azimuth_deg / HFOV) * W)
+
+def draw_bar(frame, value, bar_y, bar_height, label, color_thresholds=(0.7, 0.4)):
+    """
+    Draw a bar on the frame
+    
+    Args:
+        frame: OpenCV frame to draw on
+        value: Value to visualize (0-1 range recommended)
+        bar_y: Y position of the bar
+        bar_height: Height of the bar
+        label: Text label for the bar
+        color_thresholds: Tuple of (high_threshold, medium_threshold) for color changes
+    """
+    # Normalize value (assuming 0-1 range, adjust multiplier as needed)
+    normalized_value = np.clip(value, 0, 1)
+    bar_width = int(normalized_value * W)
+    
+    # Draw background bar (dark gray)
+    cv2.rectangle(frame, (0, bar_y), (W, bar_y + bar_height), (50, 50, 50), -1)
+    
+    # Draw value bar (color changes based on value)
+    if normalized_value > color_thresholds[0]:
+        bar_color = (0, 0, 255)
+    elif normalized_value > color_thresholds[1]:
+        bar_color = (0, 255, 255)
+    else:
+        bar_color = (0, 255, 0)
+    
+    cv2.rectangle(frame, (0, bar_y), (bar_width, bar_y + bar_height), bar_color, -1)
+    
+    # Add percentage text
+    value_text = f"{label}: {normalized_value*100:.1f}%"
+    cv2.putText(frame, value_text, (10, bar_y + bar_height//2 + 5), FONT, 0.6, (255, 255, 255), 2, cv2.LINE_AA)
 
 # Camera setup
 cap = cv2.VideoCapture(0)
@@ -101,13 +128,14 @@ cap.set(cv2.CAP_PROP_FRAME_HEIGHT, H)
 p = pyaudio.PyAudio()
 stream = p.open(format=dtype,
                 channels=n_channels,
-                rate=rate,
+                rate=fs,
                 input=True,
                 # input_device_index=2,
                 frames_per_buffer=chunk_size)
 logging.info("* recording")
 
 shift_history = deque(maxlen=5)
+overlap_history = deque(maxlen=5)
 try:
     while True:
         ret, frame = cap.read()
@@ -117,7 +145,8 @@ try:
         # Flip the frame horizontally to correct the mirror effect
         frame = cv2.flip(frame, 1)
 
-        doa_azimuth, shift_history, overlap_strength = theta_from_stream(stream, shift_history)
+        doa_azimuth, shift_history, overlap_history = theta_from_stream(
+            stream, shift_history, overlap_history)
         x = azimuth_to_x(doa_azimuth)
 
         # Draw uncertainty cone (± degrees)
@@ -136,10 +165,13 @@ try:
             (x, arrow_y - arrow_len),
             ARROW_COLOUR, thickness=4, tipLength=0.3
         )
+        # Draw two bars: confidence and overlap strength
+        bar_height = 25
+        draw_bar(frame, np.mean(overlap_history), H-bar_height, bar_height, "Confidence")
 
         # Draw text
-        label = f"Azimuth: {doa_azimuth:6.1f}"#, Danger: {max(0, min(1, 5*(overlap_strength-0.7))):.2f}"
-        cv2.putText(frame, label, (10, H - 20), FONT, 0.8, (255,255,255), 2, cv2.LINE_AA)
+        label = f"Azimuth: {doa_azimuth:6.1f}"
+        cv2.putText(frame, label, (10, H - 2* bar_height), FONT, 0.8, (255,255,255), 2, cv2.LINE_AA)
 
         # Show frame
         cv2.imshow('Azimuth DoA Overlay', frame)
