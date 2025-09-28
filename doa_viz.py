@@ -154,7 +154,7 @@ try:
         right = azimuth_to_x(doa_azimuth + UNCERTAINTY_DEG)
         left = max(0, left)
         right = min(W - 1, right)
-        cv2.rectangle(frame, (left, 0), (right, H), CONE_COLOUR, thickness=2)
+        cv2.rectangle(frame, (left, 0), (right, H), CONE_COLOUR, thickness=6)
 
         # Draw DoA arrow (vertical)
         arrow_y = H // 2
@@ -163,7 +163,7 @@ try:
             frame,
             (x, arrow_y + arrow_len // 2),
             (x, arrow_y - arrow_len),
-            ARROW_COLOUR, thickness=4, tipLength=0.3
+            ARROW_COLOUR, thickness=10, tipLength=0.3
         )
         # Draw two bars: confidence and overlap strength
         bar_height = 25
