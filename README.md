@@ -1,55 +1,34 @@
 # Acoustic Direction of Arrival (DOA) Project
 
-This project focuses on acoustic analysis and Direction of Arrival (DOA) estimation for drone detection.
+Real-time drone detection and localization using acoustic Direction of Arrival (DOA) estimation with dual-microphone arrays.
 
 ## Setup
 
-1. Install system dependencies:
 ```bash
 brew install portaudio ffmpeg
-```
-
-2. Install Python dependencies using `uv`:
-```bash
 uv sync
 ```
 
-## Audio Conversion
+## Use
 
-### Convert MP4 to WAV
+- `acoustic_footprint.py` - Generate frequency spectrum, waveform, and spectrogram visualizations
+- `audio_segmentation.py` - Split chosen audio into segments segments of chosen lenght and with chosen interval
+- `frequencies_detection.py` - Detect harmonic patterns and fundamental frequencies in audio segments
+- `doa_visualisation.py` - Real-time DOA estimation with dual-microphone array and camera overlay
 
-To convert MP4 audio files to WAV format:
+## Audio Processing with FFmpeg
 
+### Convert video to audio
 ```bash
-ffmpeg -i data/shahed_drone.mp4 -vn -acodec pcm_s16le -ar 44100 -ac 1 data/shahed_drone.wav
+ffmpeg -i data/shahed/shahec.mp4 -vn -acodec pcm_s16le -ar 44100 -ac 1 data/shahed/shahed.wav
 ```
 
-This command:
-- `-i input.mp4` - Input MP4 file
-- `-vn` - No video (audio only)
-- `-acodec pcm_s16le` - 16-bit PCM audio codec
-- `-ar 44100` - Sample rate of 44.1 kHz
-- `-ac 1` - Mono channel
-- `output.wav` - Output WAV file
-
-### Crop WAV Files
-
-To crop a WAV file to a specific time range:
-
+### Crop Audio Files
 ```bash
-ffmpeg -ss 00:00:00 -to 00:00:04 -i data/shahed-hit.wav -vn -acodec pcm_s16le data/shahed-hit-0to4s.wav
+ffmpeg -ss 00:00:00 -to 00:00:02 -i data/shahed/shahed.wav -vn -acodec pcm_s16le data/shahed/shahed_0to2s.wav
 ```
 
-This command:
-- `-ss 00:00:00` - Start time (hours:minutes:seconds)
-- `-to 00:00:04` - End time (hours:minutes:seconds)
-- `-i input.wav` - Input WAV file
-- `-vn` - No video (audio only)
-- `-acodec pcm_s16le` - 16-bit PCM audio codec
-- `output.wav` - Output WAV file
-
-## Usage
-
-- `acoustic_footprint.py` - Audio visualization and analysis
-- `azymuth_visualisation.py` - Real-time DOA visualization with camera overlay
-- `notebooks/` - Jupyter notebooks for analysis
+### Increase Volume
+```bash
+ffmpeg -i data/shahed/shahed.wav -acodec pcm_s16le -ar 44100 -ac 1 -af "volume=5.0" data/shahed/shahed_volume_x5.wav
+```
