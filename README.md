@@ -1,6 +1,9 @@
 # Acoustic Direction of Arrival (DOA) Project
 
-Real-time drone detection and localization using acoustic Direction of Arrival (DOA) estimation with dual-microphone arrays.
+Acoustic Direction of Arrival (DOA) estimation for Shahed drones using microphone array
+
+**Live Demo:** [Watch the demonstration](https://bit.ly/acoustic_doa_demo)  
+**Presentation:** [View slides](https://bit.ly/acoustic_doa_slides)
 
 ## Setup
 
