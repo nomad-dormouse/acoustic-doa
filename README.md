@@ -16,7 +16,7 @@ uv sync
 - `frequencies_detection.py` - Detect harmonic patterns and fundamental frequencies in audio segments
 - `doa_visualisation.py` - Real-time DOA estimation with dual-microphone array and camera overlay
 
-## Audio Processing with FFmpeg
+## Audio
 
 ```bash
 # Convert video to audio
