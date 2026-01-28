@@ -48,7 +48,9 @@ The workflow covers:
 - **Real-time DOA estimation and visualisation (`doa_visualisation.py`)**
   - Captures a stereo audio stream via `pyaudio` at 48 kHz from a two-microphone array with known spacing (\(d = 0.1\,\text{m}\)).
   - In each processing chunk, applies an FFT, performs simple band-pass filtering around selected harmonics, and then computes the relative shift between channels via time-domain correlation (`naive_shift`).
-  - Converts the estimated time delay to azimuth using the speed of sound and the array geometry, clamping values for numerical stability.
+  - Estimates the inter-microphone time delay \(\tau\) as the lag (in samples) that maximises the cross-correlation between the two band-limited channels, and smooths it over several chunks to reduce jitter.
+  - Interprets that delay as a path-length difference \(\Delta L = c \tau\) between microphones and converts it to azimuth using the far-field plane-wave model \(\Delta L = d \sin(\theta)\), giving \(\theta = \arcsin\left(\frac{c \tau}{d}\right)\) with values clamped for numerical stability.
+  - Maps the resulting azimuth angle into the camera’s horizontal field of view so that left/right direction in the audio corresponds to horizontal position in the video frame.
   - Uses OpenCV (`cv2`) to overlay:
     - a vertical arrow indicating the current DOA angle,
     - an uncertainty cone (\(\pm\) configurable degrees) across the camera frame,
